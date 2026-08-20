@@ -1870,9 +1870,29 @@ app.get(
 );
 
 // ==============================================================================
-// 11. SERVIR APLICAÇÃO WEB DO MORADOR (EXPO WEB)
+// 11. SERVIR FRONTENDS (ADMIN E MORADOR)
 // ==============================================================================
 
+// PAINEL ADMIN
+const possibleAdminPaths = [
+  path.join(__dirname, '../public-admin'),
+  path.join(__dirname, './public-admin'),
+  path.join(process.cwd(), 'public-admin'),
+  path.join(process.cwd(), 'api/public-admin'),
+  path.join(process.cwd(), 'admin-web/dist'),
+  path.join(__dirname, '../../admin-web/dist')
+];
+
+const adminPublicPath = possibleAdminPaths.find(p => fs.existsSync(path.join(p, 'index.html')));
+
+if (adminPublicPath) {
+  console.log(`[server]: Servindo Painel Admin a partir de: ${adminPublicPath}`);
+  app.use('/admin', express.static(adminPublicPath));
+} else {
+  console.log('[server]: Pasta public-admin não localizada.');
+}
+
+// APP MORADOR
 const possiblePublicPaths = [
   path.join(__dirname, '../public'),
   path.join(__dirname, './public'),
@@ -1887,19 +1907,31 @@ const publicPath = possiblePublicPaths.find(p => fs.existsSync(path.join(p, 'ind
 if (publicPath) {
   console.log(`[server]: Servindo aplicativo morador web a partir de: ${publicPath}`);
   app.use(express.static(publicPath));
-  app.get('*', (req, res, next) => {
-    if (req.path.startsWith('/api') || req.path.startsWith('/health')) {
-      return next();
-    }
-    const indexPath = path.join(publicPath!, 'index.html');
-    if (fs.existsSync(indexPath)) {
-      return res.sendFile(indexPath);
-    }
-    next();
-  });
 } else {
   console.log('[server]: Pasta pública web não localizada no momento. Apenas endpoints /api ativos.');
 }
+
+// CATCH ALL (SPA Routing)
+app.get('*', (req, res, next) => {
+  if (req.path.startsWith('/api') || req.path.startsWith('/health')) {
+    return next();
+  }
+  
+  if (req.path.startsWith('/admin')) {
+    if (adminPublicPath) {
+      const adminIndex = path.join(adminPublicPath, 'index.html');
+      if (fs.existsSync(adminIndex)) return res.sendFile(adminIndex);
+    }
+    return res.status(404).send('Painel Admin não encontrado.');
+  }
+
+  if (publicPath) {
+    const indexPath = path.join(publicPath, 'index.html');
+    if (fs.existsSync(indexPath)) return res.sendFile(indexPath);
+  }
+  
+  next();
+});
 
 // ==============================================================================
 // START SERVER

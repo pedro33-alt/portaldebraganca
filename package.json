@@ -1,0 +1,8 @@
+{
+  "name": "portal-de-braganca-root",
+  "version": "1.0.0",
+  "scripts": {
+    "build": "cd api && npm install && npm run build",
+    "start": "cd api && npm start"
+  }
+}

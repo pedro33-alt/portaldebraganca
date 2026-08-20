@@ -30,6 +30,7 @@ export default function App() {
   >('dashboard');
 
   const [selectedCondo, setSelectedCondo] = useState('Residencial Portal de Bragança');
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   // Dados do Dashboard e Módulos
   const [stats, setStats] = useState<any>({
@@ -272,10 +273,20 @@ export default function App() {
   }
 
   // PAINEL ADMINISTRATIVO AUTENTICADO
+  const handleTabClick = (tab: typeof activeTab) => {
+    setActiveTab(tab);
+    setIsMobileMenuOpen(false);
+  };
+
   return (
     <div className="admin-container">
+      {/* Mobile Menu Backdrop */}
+      {isMobileMenuOpen && (
+        <div className="sidebar-backdrop" onClick={() => setIsMobileMenuOpen(false)} />
+      )}
+
       {/* SIDEBAR COM OS 11 MENUS */}
-      <aside className="sidebar">
+      <aside className={`sidebar ${isMobileMenuOpen ? 'open' : ''}`}>
         <div className="sidebar-brand">
           <span className="brand-ding">DING PLATFORM</span>
           <h2 className="brand-title">Portal Bragança</h2>
@@ -291,37 +302,37 @@ export default function App() {
         </div>
 
         <nav className="nav-menu">
-          <button className={`nav-item ${activeTab === 'dashboard' ? 'active' : ''}`} onClick={() => setActiveTab('dashboard')}>
+          <button className={`nav-item ${activeTab === 'dashboard' ? 'active' : ''}`} onClick={() => handleTabClick('dashboard')}>
             📊 Dashboard
           </button>
-          <button className={`nav-item ${activeTab === 'residents' ? 'active' : ''}`} onClick={() => setActiveTab('residents')}>
+          <button className={`nav-item ${activeTab === 'residents' ? 'active' : ''}`} onClick={() => handleTabClick('residents')}>
             👥 Moradores
           </button>
-          <button className={`nav-item ${activeTab === 'news' ? 'active' : ''}`} onClick={() => setActiveTab('news')}>
+          <button className={`nav-item ${activeTab === 'news' ? 'active' : ''}`} onClick={() => handleTabClick('news')}>
             📰 Notícias
           </button>
-          <button className={`nav-item ${activeTab === 'notices' ? 'active' : ''}`} onClick={() => setActiveTab('notices')}>
+          <button className={`nav-item ${activeTab === 'notices' ? 'active' : ''}`} onClick={() => handleTabClick('notices')}>
             📢 Avisos Oficiais
           </button>
-          <button className={`nav-item ${activeTab === 'advertisers' ? 'active' : ''}`} onClick={() => setActiveTab('advertisers')}>
+          <button className={`nav-item ${activeTab === 'advertisers' ? 'active' : ''}`} onClick={() => handleTabClick('advertisers')}>
             ⭐ Anunciantes
           </button>
-          <button className={`nav-item ${activeTab === 'categories' ? 'active' : ''}`} onClick={() => setActiveTab('categories')}>
+          <button className={`nav-item ${activeTab === 'categories' ? 'active' : ''}`} onClick={() => handleTabClick('categories')}>
             🏷️ Categorias
           </button>
-          <button className={`nav-item ${activeTab === 'magazines' ? 'active' : ''}`} onClick={() => setActiveTab('magazines')}>
+          <button className={`nav-item ${activeTab === 'magazines' ? 'active' : ''}`} onClick={() => handleTabClick('magazines')}>
             📁 Revista Digital
           </button>
-          <button className={`nav-item ${activeTab === 'banners' ? 'active' : ''}`} onClick={() => setActiveTab('banners')}>
+          <button className={`nav-item ${activeTab === 'banners' ? 'active' : ''}`} onClick={() => handleTabClick('banners')}>
             🖼️ Banners da Home
           </button>
-          <button className={`nav-item ${activeTab === 'promotions' ? 'active' : ''}`} onClick={() => setActiveTab('promotions')}>
+          <button className={`nav-item ${activeTab === 'promotions' ? 'active' : ''}`} onClick={() => handleTabClick('promotions')}>
             🎁 Promoções / Cupons
           </button>
-          <button className={`nav-item ${activeTab === 'notifications' ? 'active' : ''}`} onClick={() => setActiveTab('notifications')}>
+          <button className={`nav-item ${activeTab === 'notifications' ? 'active' : ''}`} onClick={() => handleTabClick('notifications')}>
             🔔 Notificações Push
           </button>
-          <button className={`nav-item ${activeTab === 'configurations' ? 'active' : ''}`} onClick={() => setActiveTab('configurations')}>
+          <button className={`nav-item ${activeTab === 'configurations' ? 'active' : ''}`} onClick={() => handleTabClick('configurations')}>
             ⚙️ Configurações
           </button>
         </nav>
@@ -340,28 +351,33 @@ export default function App() {
               <div className="user-role">{currentUser.role.toUpperCase()}</div>
             </div>
           </div>
-          <button className="btn-logout" onClick={handleLogout}>Sair da Conta 🚪</button>
+          <button className="btn-logout" onClick={() => { handleLogout(); setIsMobileMenuOpen(false); }}>Sair da Conta 🚪</button>
         </div>
       </aside>
 
       {/* ÁREA PRINCIPAL */}
       <main className="main-content">
         <header className="topbar">
-          <div>
-            <h1 className="page-heading">
-              {activeTab === 'dashboard' && 'Visão Geral & Indicadores'}
-              {activeTab === 'residents' && 'Gerenciamento de Moradores e Unidades'}
-              {activeTab === 'news' && 'Notícias e Comunicados de Imprensa'}
-              {activeTab === 'notices' && 'Mural de Avisos Oficiais'}
-              {activeTab === 'advertisers' && 'Parceiros Comerciais & Planos DING'}
-              {activeTab === 'categories' && 'Categorias Globais e Locais'}
-              {activeTab === 'magazines' && 'Revista Digital do Condomínio'}
-              {activeTab === 'banners' && 'Banners em Destaque no App'}
-              {activeTab === 'promotions' && 'Clube de Benefícios & Cupons'}
-              {activeTab === 'notifications' && 'Disparo de Notificações Push'}
-              {activeTab === 'configurations' && 'Parâmetros e Regras do Condomínio'}
-            </h1>
-            <span className="page-subheading">{selectedCondo} • Painel Integrado ao Supabase</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <button className="mobile-menu-toggle" onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>
+              {isMobileMenuOpen ? '✕' : '☰'}
+            </button>
+            <div>
+              <h1 className="page-heading">
+                {activeTab === 'dashboard' && 'Visão Geral & Indicadores'}
+                {activeTab === 'residents' && 'Gerenciamento de Moradores e Unidades'}
+                {activeTab === 'news' && 'Notícias e Comunicados de Imprensa'}
+                {activeTab === 'notices' && 'Mural de Avisos Oficiais'}
+                {activeTab === 'advertisers' && 'Parceiros Comerciais & Planos DING'}
+                {activeTab === 'categories' && 'Categorias Globais e Locais'}
+                {activeTab === 'magazines' && 'Revista Digital do Condomínio'}
+                {activeTab === 'banners' && 'Banners em Destaque no App'}
+                {activeTab === 'promotions' && 'Clube de Benefícios & Cupons'}
+                {activeTab === 'notifications' && 'Disparo de Notificações Push'}
+                {activeTab === 'configurations' && 'Parâmetros e Regras do Condomínio'}
+              </h1>
+              <span className="page-subheading">{selectedCondo} • Painel Integrado ao Supabase</span>
+            </div>
           </div>
 
           <div className="topbar-actions">

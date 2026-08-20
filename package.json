@@ -2,7 +2,7 @@
   "name": "portal-de-braganca-root",
   "version": "1.0.0",
   "scripts": {
-    "build": "cd api && npm install && npm run build",
+    "build": "node scripts/build-all.js",
     "start": "cd api && npm start"
   }
 }

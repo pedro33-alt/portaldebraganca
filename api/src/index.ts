@@ -3,6 +3,8 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
+import path from 'path';
+import fs from 'fs';
 import { createClient } from '@supabase/supabase-js';
 import {
   authMiddleware,
@@ -1866,6 +1868,25 @@ app.get(
     }
   }
 );
+
+// ==============================================================================
+// 11. SERVIR APLICAÇÃO WEB DO MORADOR (EXPO WEB)
+// ==============================================================================
+
+const publicPath = path.join(__dirname, '../public');
+if (fs.existsSync(publicPath)) {
+  app.use(express.static(publicPath));
+  app.get('*', (req, res, next) => {
+    if (req.path.startsWith('/api') || req.path.startsWith('/health')) {
+      return next();
+    }
+    const indexPath = path.join(publicPath, 'index.html');
+    if (fs.existsSync(indexPath)) {
+      return res.sendFile(indexPath);
+    }
+    next();
+  });
+}
 
 // ==============================================================================
 // START SERVER

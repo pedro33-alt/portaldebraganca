@@ -668,6 +668,37 @@ app.post(
   }
 );
 
+app.put(
+  '/api/residents/:id',
+  authMiddleware,
+  requireRole(['sindico', 'admin_condo', 'admin_ding']),
+  async (req: AuthenticatedRequest, res) => {
+    try {
+      const { id } = req.params;
+      const { block, unit_number, is_primary, is_active } = req.body;
+      const condoId = resolveCondoId(req);
+
+      const { data, error } = await supabase
+        .from('residents')
+        .update({
+          block,
+          unit_number,
+          is_primary,
+          is_active
+        })
+        .eq('id', id)
+        .eq('condominium_id', condoId)
+        .select()
+        .single();
+
+      if (error) throw error;
+      res.json(data);
+    } catch (err: any) {
+      res.status(500).json({ error: err.message });
+    }
+  }
+);
+
 app.delete(
   '/api/residents/:id',
   authMiddleware,
@@ -743,6 +774,38 @@ app.post(
   }
 );
 
+app.put(
+  '/api/banners/:id',
+  authMiddleware,
+  requireRole(['sindico', 'admin_condo', 'admin_ding']),
+  async (req: AuthenticatedRequest, res) => {
+    try {
+      const { id } = req.params;
+      const { title, image_url, link_url, order_index, is_active } = req.body;
+      const condoId = resolveCondoId(req);
+
+      const { data, error } = await supabase
+        .from('banners')
+        .update({
+          title,
+          image_url,
+          link_url,
+          order_index: Number(order_index) || 1,
+          is_active: is_active !== undefined ? is_active : true
+        })
+        .eq('id', id)
+        .eq('condominium_id', condoId)
+        .select()
+        .single();
+
+      if (error) throw error;
+      res.json(data);
+    } catch (err: any) {
+      res.status(500).json({ error: err.message });
+    }
+  }
+);
+
 app.delete(
   '/api/banners/:id',
   authMiddleware,
@@ -808,6 +871,32 @@ app.post(
 
       if (error) throw error;
       res.status(201).json(data);
+    } catch (err: any) {
+      res.status(500).json({ error: err.message });
+    }
+  }
+);
+
+app.put(
+  '/api/categories/:id',
+  authMiddleware,
+  requireRole(['sindico', 'admin_condo', 'admin_ding']),
+  async (req: AuthenticatedRequest, res) => {
+    try {
+      const { id } = req.params;
+      const { name, type } = req.body;
+      const condoId = resolveCondoId(req);
+
+      const { data, error } = await supabase
+        .from('categories')
+        .update({ name, type })
+        .eq('id', id)
+        .or(`condominium_id.eq.${condoId},condominium_id.is.null`)
+        .select()
+        .single();
+
+      if (error) throw error;
+      res.json(data);
     } catch (err: any) {
       res.status(500).json({ error: err.message });
     }
@@ -1029,6 +1118,39 @@ app.post(
   }
 );
 
+app.put(
+  '/api/news/:id',
+  authMiddleware,
+  requireRole(['sindico', 'admin_condo', 'admin_ding']),
+  async (req: AuthenticatedRequest, res) => {
+    try {
+      const { id } = req.params;
+      const { title, summary, content, cover_image_url, category_id, is_published } = req.body;
+      const condoId = resolveCondoId(req);
+
+      const { data, error } = await supabase
+        .from('news')
+        .update({
+          title,
+          summary,
+          content,
+          cover_image_url,
+          category_id: category_id || null,
+          is_published: is_published !== undefined ? !!is_published : true
+        })
+        .eq('id', id)
+        .eq('condominium_id', condoId)
+        .select()
+        .single();
+
+      if (error) throw error;
+      res.json(data);
+    } catch (err: any) {
+      res.status(500).json({ error: err.message });
+    }
+  }
+);
+
 app.patch(
   '/api/news/:id/publish',
   authMiddleware,
@@ -1226,6 +1348,50 @@ app.patch(
   }
 );
 
+app.put(
+  '/api/advertisers/:id',
+  authMiddleware,
+  requireRole(['sindico', 'admin_condo', 'admin_ding', 'anunciante']),
+  async (req: AuthenticatedRequest, res) => {
+    try {
+      const { id } = req.params;
+      const { name, logo_url, phone, whatsapp, instagram, website_url, address, plan, category_id, is_active } = req.body;
+      const condoId = resolveCondoId(req);
+
+      let plan_id = undefined;
+      if (plan === 'premium') plan_id = '22222222-0000-0000-0000-000000000003';
+      else if (plan === 'intermediario') plan_id = '22222222-0000-0000-0000-000000000002';
+      else if (plan === 'basico') plan_id = '22222222-0000-0000-0000-000000000001';
+
+      const updateData: any = {
+        name,
+        logo_url,
+        phone,
+        whatsapp,
+        instagram,
+        website_url,
+        address,
+        is_active: is_active !== undefined ? !!is_active : true
+      };
+      if (plan_id) updateData.plan_id = plan_id;
+      if (category_id) updateData.category_id = category_id;
+
+      const { data, error } = await supabase
+        .from('advertisers')
+        .update(updateData)
+        .eq('id', id)
+        .or(`condominium_id.eq.${condoId},condominium_id.is.null`)
+        .select()
+        .single();
+
+      if (error) throw error;
+      res.json(data);
+    } catch (err: any) {
+      res.status(500).json({ error: err.message });
+    }
+  }
+);
+
 app.delete(
   '/api/advertisers/:id',
   authMiddleware,
@@ -1291,6 +1457,37 @@ app.post(
 
       if (error) throw error;
       res.status(201).json(data);
+    } catch (err: any) {
+      res.status(500).json({ error: err.message });
+    }
+  }
+);
+
+app.put(
+  '/api/promotions/:id',
+  authMiddleware,
+  requireRole(['sindico', 'admin_condo', 'admin_ding', 'anunciante']),
+  async (req: AuthenticatedRequest, res) => {
+    try {
+      const { id } = req.params;
+      const { advertiser_id, title, description, discount_percentage, coupon_code, is_active } = req.body;
+
+      const { data, error } = await supabase
+        .from('promotions')
+        .update({
+          advertiser_id,
+          title,
+          description,
+          discount_percentage: Number(discount_percentage) || 10,
+          coupon_code,
+          is_active: is_active !== undefined ? !!is_active : true
+        })
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) throw error;
+      res.json(data);
     } catch (err: any) {
       res.status(500).json({ error: err.message });
     }

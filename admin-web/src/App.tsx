@@ -167,7 +167,7 @@ export default function App() {
     setToken('');
   };
 
-  // HANDLERS GENÉRICOS DE EXCLUSÃO
+  // HANDLERS GENÉRICOS DE EXCLUSÃO E SALVAMENTO
   const handleDeleteItem = async (endpoint: string, id: string) => {
     if (!confirm('Deseja realmente excluir este registro?')) return;
     try {
@@ -179,6 +179,32 @@ export default function App() {
       fetchDashboardData();
     } catch (err) {
       alert('Erro ao excluir registro.');
+    }
+  };
+
+  const handleSaveItem = async (endpoint: string, payload: any) => {
+    const isEditing = !!payload.id;
+    const url = isEditing ? `${API_BASE}/${endpoint}/${payload.id}` : `${API_BASE}/${endpoint}`;
+    const method = isEditing ? 'PUT' : 'POST';
+
+    try {
+      const res = await fetch(url, {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(payload)
+      });
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.error || 'Erro ao salvar registro.');
+      }
+      setModalType(null);
+      setFormData({});
+      fetchDashboardData();
+    } catch (err: any) {
+      alert(err.message || 'Erro ao salvar.');
     }
   };
 
@@ -381,13 +407,33 @@ export default function App() {
           </div>
 
           <div className="topbar-actions">
+            {activeTab === 'news' && (
+              <button className="btn-primary" onClick={() => { setFormData({ title: '', summary: '', content: '', category_id: categories.find(c => c.type === 'news')?.id || '', cover_image_url: '', is_published: true }); setModalType('news'); }}>
+                + Nova Notícia
+              </button>
+            )}
+            {activeTab === 'notices' && (
+              <button className="btn-primary" onClick={() => { setFormData({ title: '', content: '', priority: 'normal', is_pinned: false }); setModalType('notice'); }}>
+                + Novo Aviso Oficial
+              </button>
+            )}
+            {activeTab === 'advertisers' && (
+              <button className="btn-primary" onClick={() => { setFormData({ name: '', plan: 'premium', phone: '', whatsapp: '', instagram: '', website_url: '', address: '', logo_url: '', category_id: categories.find(c => c.type === 'advertiser')?.id || '', is_active: true }); setModalType('advertiser'); }}>
+                + Novo Anunciante
+              </button>
+            )}
+            {activeTab === 'promotions' && (
+              <button className="btn-primary" onClick={() => { setFormData({ title: '', advertiser_id: advertisers[0]?.id || '', discount_percentage: 10, coupon_code: 'PORTAL10', description: '', is_active: true }); setModalType('promotion'); }}>
+                + Nova Promoção / Cupom
+              </button>
+            )}
             {activeTab === 'magazines' && (
               <button className="btn-primary" onClick={() => { setFormData({ edition_number: (magazines.length + 1), title: '', cover_image_url: '', pdf_url: '', description: '' }); setModalType('magazine'); }}>
                 + Nova Edição da Revista
               </button>
             )}
             {activeTab === 'banners' && (
-              <button className="btn-primary" onClick={() => { setFormData({ title: '', image_url: '', link_url: '', order_index: 1 }); setModalType('banner'); }}>
+              <button className="btn-primary" onClick={() => { setFormData({ title: '', image_url: '', link_url: '', order_index: (banners.length + 1) }); setModalType('banner'); }}>
                 + Novo Banner
               </button>
             )}
@@ -402,7 +448,7 @@ export default function App() {
               </button>
             )}
             {activeTab === 'notifications' && (
-              <button className="btn-primary" onClick={() => { setFormData({ title: '', body: '', type: 'urgente' }); setModalType('notification'); }}>
+              <button className="btn-primary" onClick={() => { setFormData({ title: '', body: '', type: 'aviso' }); setModalType('notification'); }}>
                 📢 Disparar Notificação
               </button>
             )}
@@ -490,7 +536,10 @@ export default function App() {
                     <td>{r.block} • Apto {r.unit_number}</td>
                     <td><span className="tag published">ATIVO</span></td>
                     <td>
-                      <button className="btn-action danger" onClick={() => handleDeleteItem('residents', r.id)}>Excluir</button>
+                      <div style={{ display: 'flex', gap: '6px' }}>
+                        <button className="btn-action edit" onClick={() => { setFormData({ id: r.id, name: r.profiles?.name || '', email: r.users?.email || '', phone: r.profiles?.phone || '', block: r.block, unit_number: r.unit_number }); setModalType('resident'); }}>✏️ Editar</button>
+                        <button className="btn-action danger" onClick={() => handleDeleteItem('residents', r.id)}>🗑️ Excluir</button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -531,7 +580,10 @@ export default function App() {
                       </a>
                     </td>
                     <td>
-                      <button className="btn-action danger" onClick={() => handleDeleteItem('magazines', m.id)}>Excluir</button>
+                      <div style={{ display: 'flex', gap: '6px' }}>
+                        <button className="btn-action edit" onClick={() => { setFormData(m); setModalType('magazine'); }}>✏️ Editar</button>
+                        <button className="btn-action danger" onClick={() => handleDeleteItem('magazines', m.id)}>🗑️ Excluir</button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -561,7 +613,10 @@ export default function App() {
                     <td>#{b.order_index}</td>
                     <td><span className="tag published">ATIVO</span></td>
                     <td>
-                      <button className="btn-action danger" onClick={() => handleDeleteItem('banners', b.id)}>Excluir</button>
+                      <div style={{ display: 'flex', gap: '6px' }}>
+                        <button className="btn-action edit" onClick={() => { setFormData(b); setModalType('banner'); }}>✏️ Editar</button>
+                        <button className="btn-action danger" onClick={() => handleDeleteItem('banners', b.id)}>🗑️ Excluir</button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -587,7 +642,10 @@ export default function App() {
                     <td><strong>{c.name}</strong></td>
                     <td><span className="tag normal">{c.type.toUpperCase()}</span></td>
                     <td>
-                      <button className="btn-action danger" onClick={() => handleDeleteItem('categories', c.id)}>Excluir</button>
+                      <div style={{ display: 'flex', gap: '6px' }}>
+                        <button className="btn-action edit" onClick={() => { setFormData(c); setModalType('category'); }}>✏️ Editar</button>
+                        <button className="btn-action danger" onClick={() => handleDeleteItem('categories', c.id)}>🗑️ Excluir</button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -612,12 +670,25 @@ export default function App() {
               <tbody>
                 {newsList.map((n: any) => (
                   <tr key={n.id}>
-                    <td><strong>{n.title}</strong><div style={{ fontSize: '11px', color: '#6B7280' }}>{n.summary}</div></td>
+                    <td>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        {n.cover_image_url && (
+                          <img src={n.cover_image_url} alt="Cover" style={{ width: 44, height: 44, borderRadius: 6, objectFit: 'cover' }} />
+                        )}
+                        <div>
+                          <strong>{n.title}</strong>
+                          <div style={{ fontSize: '11px', color: '#6B7280' }}>{n.summary}</div>
+                        </div>
+                      </div>
+                    </td>
                     <td>{n.categories?.name || 'Geral'}</td>
                     <td><span className={`tag ${n.is_published ? 'published' : 'draft'}`}>{n.is_published ? 'PUBLICADO' : 'RASCUNHO'}</span></td>
                     <td>{new Date(n.created_at).toLocaleDateString('pt-BR')}</td>
                     <td>
-                      <button className="btn-action danger" onClick={() => handleDeleteItem('news', n.id)}>Excluir</button>
+                      <div style={{ display: 'flex', gap: '6px' }}>
+                        <button className="btn-action edit" onClick={() => { setFormData({ ...n, category_id: n.category_id || (n.categories?.id || '') }); setModalType('news'); }}>✏️ Editar</button>
+                        <button className="btn-action danger" onClick={() => handleDeleteItem('news', n.id)}>🗑️ Excluir</button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -645,7 +716,10 @@ export default function App() {
                     <td><span className={`tag ${n.priority}`}>{n.priority.toUpperCase()}</span></td>
                     <td>{n.is_pinned ? '📌 Sim' : 'Não'}</td>
                     <td>
-                      <button className="btn-action danger" onClick={() => handleDeleteItem('notices', n.id)}>Excluir</button>
+                      <div style={{ display: 'flex', gap: '6px' }}>
+                        <button className="btn-action edit" onClick={() => { setFormData(n); setModalType('notice'); }}>✏️ Editar</button>
+                        <button className="btn-action danger" onClick={() => handleDeleteItem('notices', n.id)}>🗑️ Excluir</button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -677,12 +751,15 @@ export default function App() {
                         <strong>{a.name}</strong>
                       </div>
                     </td>
-                    <td>{a.category}</td>
+                    <td>{a.category || a.categories?.name}</td>
                     <td><span className={`plan-tag ${a.plan}`}>{a.plan.toUpperCase()}</span></td>
                     <td style={{ fontSize: '12px' }}>{a.whatsapp || a.phone || '-'}</td>
                     <td><span className={`tag ${a.is_active ? 'published' : 'draft'}`}>{a.is_active ? 'ATIVO' : 'INATIVO'}</span></td>
                     <td>
-                      <button className="btn-action danger" onClick={() => handleDeleteItem('advertisers', a.id)}>Excluir</button>
+                      <div style={{ display: 'flex', gap: '6px' }}>
+                        <button className="btn-action edit" onClick={() => { setFormData(a); setModalType('advertiser'); }}>✏️ Editar</button>
+                        <button className="btn-action danger" onClick={() => handleDeleteItem('advertisers', a.id)}>🗑️ Excluir</button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -712,7 +789,10 @@ export default function App() {
                     <td><span className="tag published">{p.discount_percentage}% OFF</span></td>
                     <td><span style={{ backgroundColor: '#D4AF37', color: '#0E3B2E', padding: '2px 8px', borderRadius: '4px', fontWeight: '900', fontSize: '11px' }}>{p.coupon_code}</span></td>
                     <td>
-                      <button className="btn-action danger" onClick={() => handleDeleteItem('promotions', p.id)}>Excluir</button>
+                      <div style={{ display: 'flex', gap: '6px' }}>
+                        <button className="btn-action edit" onClick={() => { setFormData(p); setModalType('promotion'); }}>✏️ Editar</button>
+                        <button className="btn-action danger" onClick={() => handleDeleteItem('promotions', p.id)}>🗑️ Excluir</button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -750,7 +830,7 @@ export default function App() {
                     <td style={{ maxWidth: '300px', fontSize: '12px' }}>{notif.body}</td>
                     <td style={{ fontSize: '11.5px' }}>{new Date(notif.created_at).toLocaleDateString('pt-BR')}</td>
                     <td>
-                      <button className="btn-action danger" onClick={() => handleDeleteItem('notifications', notif.id)}>Excluir</button>
+                      <button className="btn-action danger" onClick={() => handleDeleteItem('notifications', notif.id)}>🗑️ Excluir</button>
                     </td>
                   </tr>
                 ))}
@@ -787,63 +867,309 @@ export default function App() {
         )}
       </main>
 
+      {/* MODAIS DE CRIAÇÃO E EDIÇÃO */}
+
+      {/* MODAL NOTÍCIA */}
+      {modalType === 'news' && (
+        <div className="modal-overlay">
+          <div className="modal-card">
+            <div className="modal-header">
+              <h3>{formData.id ? '✏️ Editar Notícia' : '➕ Publicar Nova Notícia'}</h3>
+              <button className="btn-close" onClick={() => setModalType(null)}>✕</button>
+            </div>
+            <form onSubmit={async (e) => {
+              e.preventDefault();
+              await handleSaveItem('news', formData);
+            }}>
+              <div className="form-group">
+                <label>Título da Notícia:</label>
+                <input type="text" required value={formData.title || ''} onChange={e => setFormData({ ...formData, title: e.target.value })} placeholder="Ex: Inauguração da Quadra de Areia" />
+              </div>
+              <div className="form-group">
+                <label>Resumo / Subtítulo:</label>
+                <input type="text" required value={formData.summary || ''} onChange={e => setFormData({ ...formData, summary: e.target.value })} placeholder="Breve introdução que aparece na listagem..." />
+              </div>
+              <div className="form-group">
+                <label>Conteúdo Completo:</label>
+                <textarea rows={5} required value={formData.content || ''} onChange={e => setFormData({ ...formData, content: e.target.value })} placeholder="Escreva a notícia completa aqui..." />
+              </div>
+              <div className="form-row">
+                <div className="form-group" style={{ flex: 1 }}>
+                  <label>Categoria:</label>
+                  <select value={formData.category_id || ''} onChange={e => setFormData({ ...formData, category_id: e.target.value })}>
+                    <option value="">Geral</option>
+                    {categories.filter(c => c.type === 'news').map(c => (
+                      <option key={c.id} value={c.id}>{c.name}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="form-group" style={{ flex: 1 }}>
+                  <label>Status de Publicação:</label>
+                  <select value={formData.is_published ? 'true' : 'false'} onChange={e => setFormData({ ...formData, is_published: e.target.value === 'true' })}>
+                    <option value="true">Publicado Imediatamente</option>
+                    <option value="false">Rascunho (Oculto)</option>
+                  </select>
+                </div>
+              </div>
+              <div className="form-group">
+                <label>Foto de Capa (Upload de Arquivo):</label>
+                <input type="file" accept="image/*" onChange={async (e) => {
+                  if (e.target.files && e.target.files[0]) {
+                    const url = await handleFileUpload(e.target.files[0]);
+                    setFormData({ ...formData, cover_image_url: url });
+                  }
+                }} />
+                {uploading && <small>Enviando foto...</small>}
+                <input type="url" value={formData.cover_image_url || ''} onChange={e => setFormData({ ...formData, cover_image_url: e.target.value })} placeholder="Ou cole a URL da imagem (https://...)" style={{ marginTop: '6px' }} />
+                {formData.cover_image_url && (
+                  <div style={{ marginTop: '8px' }}>
+                    <img src={formData.cover_image_url} alt="Preview" style={{ width: '100%', maxHeight: 140, objectFit: 'cover', borderRadius: 8 }} />
+                  </div>
+                )}
+              </div>
+              <div className="modal-footer">
+                <button type="button" className="btn-secondary" onClick={() => setModalType(null)}>Cancelar</button>
+                <button type="submit" className="btn-primary">{formData.id ? 'Salvar Alterações' : 'Publicar Notícia'}</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL AVISO OFICIAL */}
+      {modalType === 'notice' && (
+        <div className="modal-overlay">
+          <div className="modal-card">
+            <div className="modal-header">
+              <h3>{formData.id ? '✏️ Editar Aviso Oficial' : '➕ Publicar Aviso no Mural'}</h3>
+              <button className="btn-close" onClick={() => setModalType(null)}>✕</button>
+            </div>
+            <form onSubmit={async (e) => {
+              e.preventDefault();
+              await handleSaveItem('notices', formData);
+            }}>
+              <div className="form-group">
+                <label>Título do Aviso:</label>
+                <input type="text" required value={formData.title || ''} onChange={e => setFormData({ ...formData, title: e.target.value })} placeholder="Ex: Manutenção na Rede Elétrica" />
+              </div>
+              <div className="form-group">
+                <label>Conteúdo / Comunicado:</label>
+                <textarea rows={4} required value={formData.content || ''} onChange={e => setFormData({ ...formData, content: e.target.value })} placeholder="Detalhes do aviso aos condôminos..." />
+              </div>
+              <div className="form-row">
+                <div className="form-group" style={{ flex: 1 }}>
+                  <label>Prioridade:</label>
+                  <select value={formData.priority || 'normal'} onChange={e => setFormData({ ...formData, priority: e.target.value })}>
+                    <option value="normal">Normal (Verde)</option>
+                    <option value="importante">Importante (Amarelo)</option>
+                    <option value="urgente">Urgente (Vermelho)</option>
+                  </select>
+                </div>
+                <div className="form-group" style={{ flex: 1 }}>
+                  <label>Fixar no Topo:</label>
+                  <select value={formData.is_pinned ? 'true' : 'false'} onChange={e => setFormData({ ...formData, is_pinned: e.target.value === 'true' })}>
+                    <option value="false">Não</option>
+                    <option value="true">📌 Sim (Destaque no topo)</option>
+                  </select>
+                </div>
+              </div>
+              <div className="modal-footer">
+                <button type="button" className="btn-secondary" onClick={() => setModalType(null)}>Cancelar</button>
+                <button type="submit" className="btn-primary">{formData.id ? 'Salvar Alterações' : 'Publicar Aviso'}</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL ANUNCIANTE */}
+      {modalType === 'advertiser' && (
+        <div className="modal-overlay">
+          <div className="modal-card">
+            <div className="modal-header">
+              <h3>{formData.id ? '✏️ Editar Anunciante' : '➕ Cadastrar Novo Anunciante Parceiro'}</h3>
+              <button className="btn-close" onClick={() => setModalType(null)}>✕</button>
+            </div>
+            <form onSubmit={async (e) => {
+              e.preventDefault();
+              await handleSaveItem('advertisers', formData);
+            }}>
+              <div className="form-group">
+                <label>Nome da Empresa / Profissional:</label>
+                <input type="text" required value={formData.name || ''} onChange={e => setFormData({ ...formData, name: e.target.value })} placeholder="Ex: Pizzaria Bragança Gourmet" />
+              </div>
+              <div className="form-row">
+                <div className="form-group" style={{ flex: 1 }}>
+                  <label>Plano DING:</label>
+                  <select value={formData.plan || 'premium'} onChange={e => setFormData({ ...formData, plan: e.target.value })}>
+                    <option value="premium">👑 Premium (Destaque VIP)</option>
+                    <option value="intermediario">⭐ Intermediário</option>
+                    <option value="basico">Básico</option>
+                  </select>
+                </div>
+                <div className="form-group" style={{ flex: 1 }}>
+                  <label>Categoria:</label>
+                  <select value={formData.category_id || ''} onChange={e => setFormData({ ...formData, category_id: e.target.value })}>
+                    <option value="">Serviços Gerais</option>
+                    {categories.filter(c => c.type === 'advertiser').map(c => (
+                      <option key={c.id} value={c.id}>{c.name}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+              <div className="form-row">
+                <div className="form-group" style={{ flex: 1 }}>
+                  <label>WhatsApp:</label>
+                  <input type="text" value={formData.whatsapp || ''} onChange={e => setFormData({ ...formData, whatsapp: e.target.value })} placeholder="(11) 99999-8888" />
+                </div>
+                <div className="form-group" style={{ flex: 1 }}>
+                  <label>Telefone / Fixo:</label>
+                  <input type="text" value={formData.phone || ''} onChange={e => setFormData({ ...formData, phone: e.target.value })} placeholder="(11) 4033-0000" />
+                </div>
+              </div>
+              <div className="form-row">
+                <div className="form-group" style={{ flex: 1 }}>
+                  <label>Instagram (@perfil):</label>
+                  <input type="text" value={formData.instagram || ''} onChange={e => setFormData({ ...formData, instagram: e.target.value })} placeholder="@pizzariabraganca" />
+                </div>
+                <div className="form-group" style={{ flex: 1 }}>
+                  <label>Site / Link:</label>
+                  <input type="url" value={formData.website_url || ''} onChange={e => setFormData({ ...formData, website_url: e.target.value })} placeholder="https://seusite.com.br" />
+                </div>
+              </div>
+              <div className="form-group">
+                <label>Endereço / Localização:</label>
+                <input type="text" value={formData.address || ''} onChange={e => setFormData({ ...formData, address: e.target.value })} placeholder="Av. Salvador Markowicz, 120 - Bragança Paulista" />
+              </div>
+              <div className="form-group">
+                <label>Logo / Foto da Empresa (Upload):</label>
+                <input type="file" accept="image/*" onChange={async (e) => {
+                  if (e.target.files && e.target.files[0]) {
+                    const url = await handleFileUpload(e.target.files[0]);
+                    setFormData({ ...formData, logo_url: url });
+                  }
+                }} />
+                {uploading && <small>Enviando...</small>}
+                <input type="url" value={formData.logo_url || ''} onChange={e => setFormData({ ...formData, logo_url: e.target.value })} placeholder="Ou URL da Logo" style={{ marginTop: '6px' }} />
+                {formData.logo_url && (
+                  <div style={{ marginTop: '8px' }}>
+                    <img src={formData.logo_url} alt="Logo Preview" style={{ width: 60, height: 60, objectFit: 'cover', borderRadius: 8 }} />
+                  </div>
+                )}
+              </div>
+              <div className="modal-footer">
+                <button type="button" className="btn-secondary" onClick={() => setModalType(null)}>Cancelar</button>
+                <button type="submit" className="btn-primary">{formData.id ? 'Salvar Alterações' : 'Cadastrar Anunciante'}</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL PROMOÇÃO / CUPOM */}
+      {modalType === 'promotion' && (
+        <div className="modal-overlay">
+          <div className="modal-card">
+            <div className="modal-header">
+              <h3>{formData.id ? '✏️ Editar Promoção' : '➕ Cadastrar Promoção / Benefício'}</h3>
+              <button className="btn-close" onClick={() => setModalType(null)}>✕</button>
+            </div>
+            <form onSubmit={async (e) => {
+              e.preventDefault();
+              await handleSaveItem('promotions', formData);
+            }}>
+              <div className="form-group">
+                <label>Título da Oferta / Benefício:</label>
+                <input type="text" required value={formData.title || ''} onChange={e => setFormData({ ...formData, title: e.target.value })} placeholder="Ex: 15% OFF em todo o cardápio" />
+              </div>
+              <div className="form-group">
+                <label>Anunciante / Parceiro:</label>
+                <select required value={formData.advertiser_id || ''} onChange={e => setFormData({ ...formData, advertiser_id: e.target.value })}>
+                  <option value="">Selecione o parceiro...</option>
+                  {advertisers.map(a => (
+                    <option key={a.id} value={a.id}>{a.name}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="form-row">
+                <div className="form-group" style={{ flex: 1 }}>
+                  <label>Desconto (%):</label>
+                  <input type="number" required value={formData.discount_percentage || 10} onChange={e => setFormData({ ...formData, discount_percentage: Number(e.target.value) })} />
+                </div>
+                <div className="form-group" style={{ flex: 1 }}>
+                  <label>Código do Cupom:</label>
+                  <input type="text" required value={formData.coupon_code || ''} onChange={e => setFormData({ ...formData, coupon_code: e.target.value.toUpperCase() })} placeholder="PORTAL15" />
+                </div>
+              </div>
+              <div className="form-group">
+                <label>Descrição / Regras de Uso:</label>
+                <textarea rows={3} value={formData.description || ''} onChange={e => setFormData({ ...formData, description: e.target.value })} placeholder="Válido para pedidos acima de R$ 50,00..." />
+              </div>
+              <div className="modal-footer">
+                <button type="button" className="btn-secondary" onClick={() => setModalType(null)}>Cancelar</button>
+                <button type="submit" className="btn-primary">{formData.id ? 'Salvar Alterações' : 'Salvar Promoção'}</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
       {/* MODAL REVISTA DIGITAL */}
       {modalType === 'magazine' && (
         <div className="modal-overlay">
           <div className="modal-card">
             <div className="modal-header">
-              <h3>Publicar Nova Edição da Revista Digital</h3>
+              <h3>{formData.id ? '✏️ Editar Edição da Revista' : '➕ Publicar Nova Edição da Revista Digital'}</h3>
               <button className="btn-close" onClick={() => setModalType(null)}>✕</button>
             </div>
             <form onSubmit={async (e) => {
               e.preventDefault();
-              await fetch(`${API_BASE}/magazines`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                body: JSON.stringify(formData)
-              });
-              setModalType(null);
-              fetchDashboardData();
+              await handleSaveItem('magazines', formData);
             }}>
               <div className="form-row">
                 <div className="form-group" style={{ flex: 1 }}>
                   <label>Número da Edição:</label>
-                  <input type="number" required value={formData.edition_number} onChange={e => setFormData({ ...formData, edition_number: e.target.value })} />
+                  <input type="number" required value={formData.edition_number || ''} onChange={e => setFormData({ ...formData, edition_number: Number(e.target.value) })} />
                 </div>
                 <div className="form-group" style={{ flex: 2 }}>
                   <label>Título da Revista:</label>
-                  <input type="text" required value={formData.title} onChange={e => setFormData({ ...formData, title: e.target.value })} placeholder="Ex: Revista Portal Bragança - Edição Especial" />
+                  <input type="text" required value={formData.title || ''} onChange={e => setFormData({ ...formData, title: e.target.value })} placeholder="Ex: Revista Portal Bragança - Edição Especial" />
                 </div>
               </div>
               <div className="form-group">
-                  <label>Capa (Upload de Imagem):</label>
-                  <input type="file" accept="image/*" required={!formData.cover_image_url} onChange={async (e) => {
-                    if (e.target.files && e.target.files[0]) {
-                      const url = await handleFileUpload(e.target.files[0]);
-                      setFormData({ ...formData, cover_image_url: url });
-                    }
-                  }} />
-                  {uploading && <small>Enviando...</small>}
-                  {formData.cover_image_url && <small>✓ Arquivo selecionado: {formData.cover_image_url.substring(0, 30)}...</small>}
-                </div>
-                <div className="form-group">
-                  <label>Arquivo PDF (Upload):</label>
-                  <input type="file" accept="application/pdf" required={!formData.pdf_url} onChange={async (e) => {
-                    if (e.target.files && e.target.files[0]) {
-                      const url = await handleFileUpload(e.target.files[0]);
-                      setFormData({ ...formData, pdf_url: url });
-                    }
-                  }} />
-                  {uploading && <small>Enviando...</small>}
-                  {formData.pdf_url && <small>✓ PDF selecionado: {formData.pdf_url.substring(0, 30)}...</small>}
-                </div>
+                <label>Capa (Upload de Imagem):</label>
+                <input type="file" accept="image/*" onChange={async (e) => {
+                  if (e.target.files && e.target.files[0]) {
+                    const url = await handleFileUpload(e.target.files[0]);
+                    setFormData({ ...formData, cover_image_url: url });
+                  }
+                }} />
+                {uploading && <small>Enviando...</small>}
+                <input type="url" value={formData.cover_image_url || ''} onChange={e => setFormData({ ...formData, cover_image_url: e.target.value })} placeholder="Ou URL da imagem de capa" style={{ marginTop: '6px' }} />
+                {formData.cover_image_url && (
+                  <div style={{ marginTop: '8px' }}>
+                    <img src={formData.cover_image_url} alt="Capa Preview" style={{ width: 80, height: 110, objectFit: 'cover', borderRadius: 8 }} />
+                  </div>
+                )}
+              </div>
               <div className="form-group">
-                <label>Resumo / Descrição da Edição:</label>
-                <textarea rows={3} value={formData.description} onChange={e => setFormData({ ...formData, description: e.target.value })} placeholder="Principais matérias e destaques..." />
+                <label>Arquivo PDF da Revista (Upload):</label>
+                <input type="file" accept="application/pdf" onChange={async (e) => {
+                  if (e.target.files && e.target.files[0]) {
+                    const url = await handleFileUpload(e.target.files[0]);
+                    setFormData({ ...formData, pdf_url: url });
+                  }
+                }} />
+                {uploading && <small>Enviando PDF...</small>}
+                <input type="url" value={formData.pdf_url || ''} onChange={e => setFormData({ ...formData, pdf_url: e.target.value })} placeholder="Ou link direto do arquivo PDF" style={{ marginTop: '6px' }} />
+              </div>
+              <div className="form-group">
+                <label>Resumo / Destaques da Edição:</label>
+                <textarea rows={3} value={formData.description || ''} onChange={e => setFormData({ ...formData, description: e.target.value })} placeholder="Principais matérias e destaques..." />
               </div>
               <div className="modal-footer">
                 <button type="button" className="btn-secondary" onClick={() => setModalType(null)}>Cancelar</button>
-                <button type="submit" className="btn-primary">Publicar Edição</button>
+                <button type="submit" className="btn-primary">{formData.id ? 'Salvar Alterações' : 'Publicar Edição'}</button>
               </div>
             </form>
           </div>
@@ -855,46 +1181,40 @@ export default function App() {
         <div className="modal-overlay">
           <div className="modal-card">
             <div className="modal-header">
-              <h3>Cadastrar Novo Morador</h3>
+              <h3>{formData.id ? '✏️ Editar Morador' : '➕ Cadastrar Novo Morador'}</h3>
               <button className="btn-close" onClick={() => setModalType(null)}>✕</button>
             </div>
             <form onSubmit={async (e) => {
               e.preventDefault();
-              await fetch(`${API_BASE}/residents`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                body: JSON.stringify(formData)
-              });
-              setModalType(null);
-              fetchDashboardData();
+              await handleSaveItem('residents', formData);
             }}>
               <div className="form-group">
                 <label>Nome Completo:</label>
-                <input type="text" required value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} placeholder="Ex: Maria Fernandes" />
+                <input type="text" required value={formData.name || ''} onChange={e => setFormData({ ...formData, name: e.target.value })} placeholder="Ex: Maria Fernandes" />
               </div>
               <div className="form-row">
                 <div className="form-group" style={{ flex: 1 }}>
                   <label>E-mail:</label>
-                  <input type="email" required value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} placeholder="maria@email.com" />
+                  <input type="email" required value={formData.email || ''} onChange={e => setFormData({ ...formData, email: e.target.value })} placeholder="maria@email.com" />
                 </div>
                 <div className="form-group" style={{ flex: 1 }}>
                   <label>Telefone / WhatsApp:</label>
-                  <input type="text" value={formData.phone} onChange={e => setFormData({ ...formData, phone: e.target.value })} placeholder="(11) 98888-7777" />
+                  <input type="text" value={formData.phone || ''} onChange={e => setFormData({ ...formData, phone: e.target.value })} placeholder="(11) 98888-7777" />
                 </div>
               </div>
               <div className="form-row">
                 <div className="form-group" style={{ flex: 1 }}>
                   <label>Bloco / Alameda:</label>
-                  <input type="text" required value={formData.block} onChange={e => setFormData({ ...formData, block: e.target.value })} placeholder="Bloco A" />
+                  <input type="text" required value={formData.block || ''} onChange={e => setFormData({ ...formData, block: e.target.value })} placeholder="Bloco A" />
                 </div>
                 <div className="form-group" style={{ flex: 1 }}>
                   <label>Número da Unidade / Apto:</label>
-                  <input type="text" required value={formData.unit_number} onChange={e => setFormData({ ...formData, unit_number: e.target.value })} placeholder="102" />
+                  <input type="text" required value={formData.unit_number || ''} onChange={e => setFormData({ ...formData, unit_number: e.target.value })} placeholder="102" />
                 </div>
               </div>
               <div className="modal-footer">
                 <button type="button" className="btn-secondary" onClick={() => setModalType(null)}>Cancelar</button>
-                <button type="submit" className="btn-primary">Salvar Morador</button>
+                <button type="submit" className="btn-primary">{formData.id ? 'Salvar Alterações' : 'Salvar Morador'}</button>
               </div>
             </form>
           </div>
@@ -906,75 +1226,84 @@ export default function App() {
         <div className="modal-overlay">
           <div className="modal-card">
             <div className="modal-header">
-              <h3>Disparar Notificação Push Geral</h3>
+              <h3>📢 Disparar Notificação Push Geral</h3>
               <button className="btn-close" onClick={() => setModalType(null)}>✕</button>
             </div>
             <form onSubmit={async (e) => {
               e.preventDefault();
-              await fetch(`${API_BASE}/notifications`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                body: JSON.stringify(formData)
-              });
-              setModalType(null);
-              fetchDashboardData();
+              await handleSaveItem('notifications', formData);
             }}>
               <div className="form-group">
+                <label>Tipo de Notificação:</label>
+                <select value={formData.type || 'aviso'} onChange={e => setFormData({ ...formData, type: e.target.value })}>
+                  <option value="aviso">📢 Aviso Geral</option>
+                  <option value="noticia">📰 Nova Notícia</option>
+                  <option value="manutencao">🛠️ Manutenção Programada</option>
+                  <option value="comunicado">📋 Comunicado da Diretoria</option>
+                  <option value="revista">📁 Nova Revista Digital</option>
+                  <option value="promocao">🎁 Promoção Parceiro DING</option>
+                </select>
+              </div>
+              <div className="form-group">
                 <label>Título do Alerta:</label>
-                <input type="text" required value={formData.title} onChange={e => setFormData({ ...formData, title: e.target.value })} placeholder="Ex: Aviso Importante sobre a Portaria" />
+                <input type="text" required value={formData.title || ''} onChange={e => setFormData({ ...formData, title: e.target.value })} placeholder="Ex: Aviso Importante sobre a Portaria" />
               </div>
               <div className="form-group">
                 <label>Mensagem da Notificação:</label>
-                <textarea rows={3} required value={formData.body} onChange={e => setFormData({ ...formData, body: e.target.value })} placeholder="Texto que aparecerá na tela do celular dos moradores..." />
+                <textarea rows={3} required value={formData.body || ''} onChange={e => setFormData({ ...formData, body: e.target.value })} placeholder="Texto que aparecerá na tela do celular dos moradores..." />
               </div>
               <div className="modal-footer">
                 <button type="button" className="btn-secondary" onClick={() => setModalType(null)}>Cancelar</button>
-                <button type="submit" className="btn-primary">Disparar Agora</button>
+                <button type="submit" className="btn-primary">Disparar Agora 🚀</button>
               </div>
             </form>
           </div>
         </div>
       )}
+
       {/* MODAL BANNER */}
       {modalType === 'banner' && (
         <div className="modal-overlay">
           <div className="modal-card">
             <div className="modal-header">
-              <h3>Adicionar Novo Banner da Home</h3>
+              <h3>{formData.id ? '✏️ Editar Banner' : '➕ Adicionar Novo Banner da Home'}</h3>
               <button className="btn-close" onClick={() => setModalType(null)}>✕</button>
             </div>
             <form onSubmit={async (e) => {
               e.preventDefault();
-              await fetch(`${API_BASE}/banners`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                body: JSON.stringify(formData)
-              });
-              setModalType(null);
-              fetchDashboardData();
+              await handleSaveItem('banners', formData);
             }}>
               <div className="form-group">
                 <label>Título do Banner:</label>
-                <input type="text" required value={formData.title} onChange={e => setFormData({ ...formData, title: e.target.value })} placeholder="Ex: Promoção de Natal" />
+                <input type="text" required value={formData.title || ''} onChange={e => setFormData({ ...formData, title: e.target.value })} placeholder="Ex: Clube de Benefícios Portal Bragança" />
               </div>
               <div className="form-group">
-                <label>Imagem do Banner (Upload):</label>
-                <input type="file" accept="image/*" required={!formData.image_url} onChange={async (e) => {
+                <label>Link de Destino ao Clicar (URL opcional):</label>
+                <input type="text" value={formData.link_url || ''} onChange={e => setFormData({ ...formData, link_url: e.target.value })} placeholder="Ex: /advertisers ou https://..." />
+              </div>
+              <div className="form-group">
+                <label>Imagem do Banner (Upload de Imagem):</label>
+                <input type="file" accept="image/*" onChange={async (e) => {
                   if (e.target.files && e.target.files[0]) {
                     const url = await handleFileUpload(e.target.files[0]);
                     setFormData({ ...formData, image_url: url });
                   }
                 }} />
                 {uploading && <small>Enviando...</small>}
-                {formData.image_url && <small>✓ Arquivo selecionado: {formData.image_url.substring(0, 30)}...</small>}
+                <input type="url" value={formData.image_url || ''} onChange={e => setFormData({ ...formData, image_url: e.target.value })} placeholder="Ou URL da imagem do banner" style={{ marginTop: '6px' }} />
+                {formData.image_url && (
+                  <div style={{ marginTop: '8px' }}>
+                    <img src={formData.image_url} alt="Preview" style={{ width: '100%', maxHeight: 120, objectFit: 'cover', borderRadius: 8 }} />
+                  </div>
+                )}
               </div>
               <div className="form-group">
                 <label>Ordem de Exibição:</label>
-                <input type="number" required value={formData.order_index} onChange={e => setFormData({ ...formData, order_index: Number(e.target.value) })} />
+                <input type="number" required value={formData.order_index || 1} onChange={e => setFormData({ ...formData, order_index: Number(e.target.value) })} />
               </div>
               <div className="modal-footer">
                 <button type="button" className="btn-secondary" onClick={() => setModalType(null)}>Cancelar</button>
-                <button type="submit" className="btn-primary">Salvar Banner</button>
+                <button type="submit" className="btn-primary">{formData.id ? 'Salvar Alterações' : 'Salvar Banner'}</button>
               </div>
             </form>
           </div>
@@ -986,33 +1315,27 @@ export default function App() {
         <div className="modal-overlay">
           <div className="modal-card">
             <div className="modal-header">
-              <h3>Criar Nova Categoria</h3>
+              <h3>{formData.id ? '✏️ Editar Categoria' : '➕ Criar Nova Categoria'}</h3>
               <button className="btn-close" onClick={() => setModalType(null)}>✕</button>
             </div>
             <form onSubmit={async (e) => {
               e.preventDefault();
-              await fetch(`${API_BASE}/categories`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                body: JSON.stringify(formData)
-              });
-              setModalType(null);
-              fetchDashboardData();
+              await handleSaveItem('categories', formData);
             }}>
               <div className="form-group">
                 <label>Nome da Categoria:</label>
-                <input type="text" required value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} placeholder="Ex: Gastronomia" />
+                <input type="text" required value={formData.name || ''} onChange={e => setFormData({ ...formData, name: e.target.value })} placeholder="Ex: Gastronomia" />
               </div>
               <div className="form-group">
                 <label>Tipo (Módulo):</label>
-                <select value={formData.type} onChange={e => setFormData({ ...formData, type: e.target.value })}>
+                <select value={formData.type || 'news'} onChange={e => setFormData({ ...formData, type: e.target.value })}>
                   <option value="news">Notícias e Comunicados</option>
                   <option value="advertiser">Catálogo de Anunciantes</option>
                 </select>
               </div>
               <div className="modal-footer">
                 <button type="button" className="btn-secondary" onClick={() => setModalType(null)}>Cancelar</button>
-                <button type="submit" className="btn-primary">Salvar Categoria</button>
+                <button type="submit" className="btn-primary">{formData.id ? 'Salvar Alterações' : 'Salvar Categoria'}</button>
               </div>
             </form>
           </div>
@@ -1021,3 +1344,4 @@ export default function App() {
     </div>
   );
 }
+

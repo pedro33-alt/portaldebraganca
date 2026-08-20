@@ -1873,19 +1873,32 @@ app.get(
 // 11. SERVIR APLICAÇÃO WEB DO MORADOR (EXPO WEB)
 // ==============================================================================
 
-const publicPath = path.join(__dirname, '../public');
-if (fs.existsSync(publicPath)) {
+const possiblePublicPaths = [
+  path.join(__dirname, '../public'),
+  path.join(__dirname, './public'),
+  path.join(process.cwd(), 'public'),
+  path.join(process.cwd(), 'api/public'),
+  path.join(process.cwd(), 'mobile/dist'),
+  path.join(__dirname, '../../mobile/dist')
+];
+
+const publicPath = possiblePublicPaths.find(p => fs.existsSync(path.join(p, 'index.html')));
+
+if (publicPath) {
+  console.log(`[server]: Servindo aplicativo morador web a partir de: ${publicPath}`);
   app.use(express.static(publicPath));
   app.get('*', (req, res, next) => {
     if (req.path.startsWith('/api') || req.path.startsWith('/health')) {
       return next();
     }
-    const indexPath = path.join(publicPath, 'index.html');
+    const indexPath = path.join(publicPath!, 'index.html');
     if (fs.existsSync(indexPath)) {
       return res.sendFile(indexPath);
     }
     next();
   });
+} else {
+  console.log('[server]: Pasta pública web não localizada no momento. Apenas endpoints /api ativos.');
 }
 
 // ==============================================================================

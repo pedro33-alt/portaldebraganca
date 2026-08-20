@@ -4,5 +4,8 @@
   "scripts": {
     "build": "node scripts/build-all.js",
     "start": "cd api && npm start"
+  },
+  "engines": {
+    "node": ">=20.12.0"
   }
 }

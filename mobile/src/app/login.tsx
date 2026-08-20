@@ -135,12 +135,23 @@ export default function LoginScreen() {
                 <TouchableOpacity
                   style={styles.demoBtn}
                   onPress={() => {
+                    setEmail('morador.teste@rosariofatima.com.br');
+                    setPassword('123456');
+                    handleLogin('morador.teste@rosariofatima.com.br', '123456');
+                  }}
+                >
+                  <Text style={styles.demoBtnText}>🌹 Morador Teste (Rosário de Fátima)</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={styles.demoBtn}
+                  onPress={() => {
                     setEmail('morador@portalbraganca.com.br');
                     setPassword('123456');
                     handleLogin('morador@portalbraganca.com.br', '123456');
                   }}
                 >
-                  <Text style={styles.demoBtnText}>🏠 Entrar como Morador</Text>
+                  <Text style={styles.demoBtnText}>🏠 Morador (Portal de Bragança)</Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity

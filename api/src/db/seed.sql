@@ -3,7 +3,7 @@
 -- V3 (Portal de Bragança - Oficial)
 -- ==============================================================================
 
--- 1. Inserir Condomínio Principal
+-- 1. Inserir Condomínios
 INSERT INTO condominiums (id, name, slug, cnpj, address, city, state, primary_color, secondary_color)
 VALUES (
     '00000000-0000-0000-0000-000000000001',
@@ -15,12 +15,25 @@ VALUES (
     'SP',
     '#0E3B2E',
     '#D4AF37'
+),
+(
+    '00000000-0000-0000-0000-000000000002',
+    'Residencial Rosário de Fátima',
+    'rosario-de-fatima',
+    '98.765.432/0001-10',
+    'Rua das Camélias, 500 - Jardim Rosário',
+    'Bragança Paulista',
+    'SP',
+    '#1E3A8A',
+    '#3B82F6'
 ) ON CONFLICT (id) DO NOTHING;
 
 -- 2. Configurações
 INSERT INTO configurations (condominium_id, key, value) VALUES
 ('00000000-0000-0000-0000-000000000001', 'reservation_rules', '{"min_advance_hours": 24, "max_advance_days": 30}'),
-('00000000-0000-0000-0000-000000000001', 'support_contact', '{"email": "suporte@portalbraganca.com.br", "phone": "(11) 4033-2358"}')
+('00000000-0000-0000-0000-000000000001', 'support_contact', '{"email": "suporte@portalbraganca.com.br", "phone": "(11) 4033-2358"}'),
+('00000000-0000-0000-0000-000000000002', 'reservation_rules', '{"min_advance_hours": 12, "max_advance_days": 15}'),
+('00000000-0000-0000-0000-000000000002', 'support_contact', '{"email": "contato@rosariofatima.com.br", "phone": "(11) 4033-9999"}')
 ON CONFLICT DO NOTHING;
 
 -- 3. Categorias (Globais e Locais)
@@ -45,7 +58,8 @@ INSERT INTO users (id, email) VALUES
 ('20000000-0000-0000-0000-000000000002', 'sindico@portalbraganca.com.br'),
 ('20000000-0000-0000-0000-000000000003', 'porteiro@portalbraganca.com.br'),
 ('20000000-0000-0000-0000-000000000004', 'admin@portalbraganca.com.br'),
-('20000000-0000-0000-0000-000000000005', 'admin@dingpublicidade.com.br')
+('20000000-0000-0000-0000-000000000005', 'admin@dingpublicidade.com.br'),
+('20000000-0000-0000-0000-000000000006', 'morador.teste@rosariofatima.com.br')
 ON CONFLICT (id) DO NOTHING;
 
 -- 6. Inserir Perfis
@@ -54,14 +68,16 @@ INSERT INTO profiles (user_id, name, phone, avatar_url) VALUES
 ('20000000-0000-0000-0000-000000000002', 'Ana Oliveira (Síndica)', '(11) 98765-1111', 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150'),
 ('20000000-0000-0000-0000-000000000003', 'Roberto Santos (Portaria)', '(11) 98765-2222', 'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?w=150'),
 ('20000000-0000-0000-0000-000000000004', 'Administração Residencial', '(11) 4033-2358', 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150'),
-('20000000-0000-0000-0000-000000000005', 'Equipe DING Publicidade', '(11) 99999-9999', 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=150')
-ON CONFLICT DO NOTHING;
+('20000000-0000-0000-0000-000000000005', 'Equipe DING Publicidade', '(11) 99999-9999', 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=150'),
+('20000000-0000-0000-0000-000000000006', 'Morador Teste (Rosário de Fátima)', '(11) 98888-7777', 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150')
+ON CONFLICT (id) DO NOTHING;
 
 -- 7. Moradores e Administradores
 INSERT INTO residents (user_id, condominium_id, block, unit_number, is_primary) VALUES
 ('20000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'Alameda dos Lagos', '101', true),
-('20000000-0000-0000-0000-000000000002', '00000000-0000-0000-0000-000000000001', 'Alameda Principal', '202', true)
-ON CONFLICT DO NOTHING;
+('20000000-0000-0000-0000-000000000002', '00000000-0000-0000-0000-000000000001', 'Alameda Principal', '202', true),
+('20000000-0000-0000-0000-000000000006', '00000000-0000-0000-0000-000000000002', 'Bloco A', '102', true)
+ON CONFLICT (id) DO NOTHING;
 
 INSERT INTO administrators (user_id, condominium_id, role) VALUES
 ('20000000-0000-0000-0000-000000000002', '00000000-0000-0000-0000-000000000001', 'sindico'),

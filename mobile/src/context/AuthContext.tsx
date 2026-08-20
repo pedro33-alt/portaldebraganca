@@ -41,17 +41,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           setToken(storedToken);
           setUser(JSON.parse(storedUser));
         } else {
-          // Usuário padrão de demonstração se não houver sessão gravada
-          const defaultUser: User = {
-            id: '20000000-0000-0000-0000-000000000001',
-            name: 'Carlos Silva',
-            email: 'morador@portalbraganca.com.br',
-            role: 'morador',
-            condominium_id: '00000000-0000-0000-0000-000000000001',
-            unit_id: 'Bloco A • Apto 101',
-            avatar_url: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150'
-          };
-          setUser(defaultUser);
+          setUser(null);
+          setToken(null);
         }
       } catch (err) {
         console.error('Erro ao carregar sessão:', err);

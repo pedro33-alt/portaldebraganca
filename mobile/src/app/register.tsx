@@ -28,7 +28,6 @@ export default function RegisterScreen() {
   const [unitNumber, setUnitNumber] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [userRole, setUserRole] = useState<'morador' | 'anunciante'>('morador');
   const [loading, setLoading] = useState(false);
 
   const handleRegister = async () => {
@@ -54,13 +53,12 @@ export default function RegisterScreen() {
       phone,
       block,
       unit_number: unitNumber,
-      password,
-      role: userRole
+      password
     });
     setLoading(false);
 
     if (res.success) {
-      Alert.alert('Conta Criada!', 'Seu cadastro foi realizado com sucesso.');
+      Alert.alert('Conta Criada!', 'Seu cadastro de morador foi realizado com sucesso.');
       router.replace('/');
     } else {
       Alert.alert('Erro no Cadastro', res.error || 'Não foi possível cadastrar.');
@@ -75,7 +73,7 @@ export default function RegisterScreen() {
         <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
           <Ionicons name="chevron-back" size={20} color="#FFFFFF" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Criar Nova Conta</Text>
+        <Text style={styles.headerTitle}>Criar Conta de Morador</Text>
         <View style={{ width: 36 }} />
       </View>
 
@@ -85,29 +83,8 @@ export default function RegisterScreen() {
       >
         <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
           <View style={styles.formCard}>
-            <Text style={styles.cardHeading}>Cadastro de Morador / Parceiro</Text>
-            <Text style={styles.cardSub}>Residencial Portal de Bragança</Text>
-
-            {/* SELETOR DE FUNÇÃO */}
-            <View style={styles.roleSelector}>
-              <TouchableOpacity
-                style={[styles.roleOption, userRole === 'morador' && styles.roleOptionActive]}
-                onPress={() => setUserRole('morador')}
-              >
-                <Text style={[styles.roleOptionText, userRole === 'morador' && styles.roleOptionTextActive]}>
-                  🏠 Sou Morador
-                </Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={[styles.roleOption, userRole === 'anunciante' && styles.roleOptionActive]}
-                onPress={() => setUserRole('anunciante')}
-              >
-                <Text style={[styles.roleOptionText, userRole === 'anunciante' && styles.roleOptionTextActive]}>
-                  ⭐ Sou Anunciante
-                </Text>
-              </TouchableOpacity>
-            </View>
+            <Text style={styles.cardHeading}>Cadastro de Morador</Text>
+            <Text style={styles.cardSub}>Informe seus dados para acessar o aplicativo do residencial</Text>
 
             <View style={styles.inputGroup}>
               <Text style={styles.inputLabel}>NOME COMPLETO *</Text>
@@ -145,31 +122,29 @@ export default function RegisterScreen() {
               />
             </View>
 
-            {userRole === 'morador' && (
-              <View style={styles.formRow}>
-                <View style={[styles.inputGroup, { flex: 1 }]}>
-                  <Text style={styles.inputLabel}>BLOCO / ALAMEDA</Text>
-                  <TextInput
-                    style={styles.input}
-                    placeholder="Bloco A"
-                    placeholderTextColor="#9CA3AF"
-                    value={block}
-                    onChangeText={setBlock}
-                  />
-                </View>
-
-                <View style={[styles.inputGroup, { flex: 1 }]}>
-                  <Text style={styles.inputLabel}>UNIDADE / APTO *</Text>
-                  <TextInput
-                    style={styles.input}
-                    placeholder="101"
-                    placeholderTextColor="#9CA3AF"
-                    value={unitNumber}
-                    onChangeText={setUnitNumber}
-                  />
-                </View>
+            <View style={styles.formRow}>
+              <View style={[styles.inputGroup, { flex: 1 }]}>
+                <Text style={styles.inputLabel}>BLOCO / ALAMEDA</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Bloco A"
+                  placeholderTextColor="#9CA3AF"
+                  value={block}
+                  onChangeText={setBlock}
+                />
               </View>
-            )}
+
+              <View style={[styles.inputGroup, { flex: 1 }]}>
+                <Text style={styles.inputLabel}>UNIDADE / APTO *</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="101"
+                  placeholderTextColor="#9CA3AF"
+                  value={unitNumber}
+                  onChangeText={setUnitNumber}
+                />
+              </View>
+            </View>
 
             <View style={styles.inputGroup}>
               <Text style={styles.inputLabel}>CRIAR SENHA (MÍNIMO 6 DÍGITOS) *</Text>

@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -13,64 +13,64 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import { API_BASE } from '../config';
 
 const { width } = Dimensions.get('window');
 const CAROUSEL_WIDTH = width - 36; // marginHorizontal 18 * 2
 
 interface BannerItem {
   id: string;
-  tag: string;
-  tagColor: string;
+  tag?: string;
+  tagColor?: string;
   title: string;
-  subtitle: string;
-  image: string;
-  route: string;
+  subtitle?: string;
+  image_url: string;
+  link_url?: string;
 }
 
-const BANNERS: BannerItem[] = [
+const FALLBACK_BANNERS: BannerItem[] = [
   {
-    id: '1',
+    id: 'fallback-1',
     tag: 'AVISO IMPORTANTE',
     tagColor: '#B91C1C',
     title: 'Manutenção na rede de água',
     subtitle: 'Amanhã, das 08h às 12h.\nSaiba mais na seção de avisos.',
-    image: 'https://yata.s3-object.locaweb.com.br/ddfce81eb289717347358bbcd1ef3710dc0ddab48e705876a139158f70832a8e',
-    route: '/notices',
-  },
-  {
-    id: '2',
-    tag: 'NOVIDADE',
-    tagColor: '#D4AF37',
-    title: 'Nova Área Gourmet Liberada',
-    subtitle: 'Agende agora seu churrasco.\nVeja as fotos da inauguração.',
-    image: 'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=800&q=80',
-    route: '/reservations',
-  },
-  {
-    id: '3',
-    tag: 'CLUBE DE VANTAGENS',
-    tagColor: '#388E3C',
-    title: 'Desconto no PetShop Cão Feliz',
-    subtitle: '20% OFF para moradores.\nApresente o app.',
-    image: 'https://images.unsplash.com/photo-1516734212186-a967f81ad0d7?w=800&q=80',
-    route: '/advertisers',
+    image_url: 'https://yata.s3-object.locaweb.com.br/ddfce81eb289717347358bbcd1ef3710dc0ddab48e705876a139158f70832a8e',
+    link_url: '/notices',
   }
 ];
 
-interface HeroBannerProps {
-  onPressAction?: () => void;
-}
-
-export default function HeroBanner({ onPressAction }: HeroBannerProps) {
+export default function HeroBanner() {
   const router = useRouter();
   const [activeSlide, setActiveSlide] = useState(0);
+  const [banners, setBanners] = useState<BannerItem[]>([]);
+
+  useEffect(() => {
+    const fetchBanners = async () => {
+      try {
+        const res = await fetch(`${API_BASE}/banners`);
+        const data = await res.json();
+        if (Array.isArray(data) && data.length > 0) {
+          setBanners(data);
+        } else {
+          setBanners(FALLBACK_BANNERS);
+        }
+      } catch (err) {
+        console.error('Erro ao buscar banners:', err);
+        setBanners(FALLBACK_BANNERS);
+      }
+    };
+    fetchBanners();
+  }, []);
 
   const onScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
     const slide = Math.round(event.nativeEvent.contentOffset.x / CAROUSEL_WIDTH);
-    if (slide !== activeSlide && slide >= 0 && slide < BANNERS.length) {
+    if (slide !== activeSlide && slide >= 0 && slide < banners.length) {
       setActiveSlide(slide);
     }
   };
+
+  if (banners.length === 0) return null;
 
   return (
     <View style={styles.container}>
@@ -83,10 +83,10 @@ export default function HeroBanner({ onPressAction }: HeroBannerProps) {
         decelerationRate="fast"
         snapToInterval={CAROUSEL_WIDTH}
       >
-        {BANNERS.map((banner) => (
+        {banners.map((banner) => (
           <View key={banner.id} style={{ width: CAROUSEL_WIDTH }}>
             <ImageBackground
-              source={{ uri: banner.image }}
+              source={{ uri: banner.image_url }}
               style={styles.imageBackground}
               imageStyle={styles.imageStyle}
             >
@@ -94,21 +94,30 @@ export default function HeroBanner({ onPressAction }: HeroBannerProps) {
                 colors={['rgba(0,0,0,0.1)', 'rgba(0,0,0,0.6)', 'rgba(10,35,25,0.95)']}
                 style={styles.gradient}
               >
-                <View style={[styles.tagBadge, { backgroundColor: banner.tagColor }]}>
-                  <Text style={styles.tagText}>{banner.tag}</Text>
-                </View>
+                {banner.tag && (
+                  <View style={[styles.tagBadge, { backgroundColor: banner.tagColor || '#D4AF37' }]}>
+                    <Text style={styles.tagText}>{banner.tag}</Text>
+                  </View>
+                )}
 
                 <Text style={styles.title}>{banner.title}</Text>
-                <Text style={styles.subtitle}>{banner.subtitle}</Text>
+                
+                {banner.subtitle && (
+                  <Text style={styles.subtitle}>{banner.subtitle}</Text>
+                )}
 
-                <TouchableOpacity
-                  style={styles.actionButton}
-                  onPress={() => router.push(banner.route as any)}
-                  activeOpacity={0.85}
-                >
-                  <Text style={styles.actionButtonText}>Ver mais</Text>
-                  <Ionicons name="chevron-forward" size={14} color="#FFFFFF" style={{ marginLeft: 4 }} />
-                </TouchableOpacity>
+                {banner.link_url ? (
+                  <TouchableOpacity
+                    style={styles.actionButton}
+                    onPress={() => router.push(banner.link_url as any)}
+                    activeOpacity={0.85}
+                  >
+                    <Text style={styles.actionButtonText}>Ver mais</Text>
+                    <Ionicons name="chevron-forward" size={14} color="#FFFFFF" style={{ marginLeft: 4 }} />
+                  </TouchableOpacity>
+                ) : (
+                  <View style={{ height: 20 }} />
+                )}
               </LinearGradient>
             </ImageBackground>
           </View>
@@ -116,14 +125,16 @@ export default function HeroBanner({ onPressAction }: HeroBannerProps) {
       </ScrollView>
 
       {/* Indicadores de Carrossel */}
-      <View style={styles.dotsContainer}>
-        {BANNERS.map((_, index) => (
-          <View
-            key={index}
-            style={[styles.dot, activeSlide === index && styles.activeDot]}
-          />
-        ))}
-      </View>
+      {banners.length > 1 && (
+        <View style={styles.dotsContainer}>
+          {banners.map((_, index) => (
+            <View
+              key={index}
+              style={[styles.dot, activeSlide === index && styles.activeDot]}
+            />
+          ))}
+        </View>
+      )}
     </View>
   );
 }

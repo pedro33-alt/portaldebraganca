@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "scripts": {
     "build": "node scripts/build-all.js",
-    "start": "node api/dist/index.js"
+    "start": "node -e \"if (!require('fs').existsSync('api/dist/index.js')) { console.log('⚡ Compilando API no startup...'); require('child_process').execSync('npx tsc', { cwd: 'api', stdio: 'inherit' }); } require('./api/dist/index.js');\""
   },
   "engines": {
     "node": "22.x"

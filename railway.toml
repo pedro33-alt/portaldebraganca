@@ -6,4 +6,4 @@ buildCommand = "npm run build"
 NIXPACKS_NODE_VERSION = "22"
 
 [deploy]
-startCommand = "node api/dist/index.js"
+startCommand = "node -e \"if (!require('fs').existsSync('api/dist/index.js')) { console.log('⚡ Compilando API no startup...'); require('child_process').execSync('npx tsc', { cwd: 'api', stdio: 'inherit' }); } require('./api/dist/index.js');\""

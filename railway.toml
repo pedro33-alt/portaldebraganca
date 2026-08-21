@@ -1,5 +1,5 @@
 [build]
-builder = "docker"
+builder = "dockerfile"
 
 [env]
 NIXPACKS_NODE_VERSION = "22"

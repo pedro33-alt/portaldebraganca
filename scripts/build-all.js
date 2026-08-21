@@ -7,7 +7,7 @@ console.log('🚀 [BUILD PORTAL BRAGANÇA]: INICIANDO COMPILAÇÃO GERAL PARA RA
 console.log('==============================================================================\n');
 
 const rootDir = path.resolve(__dirname, '..');
-const rootDist = path.join(rootDir, 'out');
+const rootDist = path.join(rootDir, 'dist');
 const apiDir = path.join(rootDir, 'api');
 const adminDir = path.join(rootDir, 'admin-web');
 const mobileDir = path.join(rootDir, 'mobile');
@@ -53,17 +53,17 @@ try {
 // ------------------------------------------------------------------------------
 // PASSO 4: ESPELHAR BUILD NA RAIZ (REQUISITO FUNDAMENTAL DO NIXPACKS / RAILWAY)
 // ------------------------------------------------------------------------------
-console.log('\n4. Espelhando estrutura de build na raiz (/out, /out/public, /out/public-admin)...');
+console.log('\n4. Espelhando estrutura de build na raiz (/dist, /dist/public, /dist/public-admin)...');
 
-// Espelhar api/dist para /app/out
+// Espelhar api/dist para /app/dist
 if (fs.existsSync(apiDist)) {
   if (fs.existsSync(rootDist)) fs.rmSync(rootDist, { recursive: true, force: true });
   fs.mkdirSync(rootDist, { recursive: true });
   fs.cpSync(apiDist, rootDist, { recursive: true });
-  console.log('✅ Pasta api/dist espelhada na raiz (/out)!');
+  console.log('✅ Pasta api/dist espelhada na raiz (/dist)!');
 }
 
-// Espelhar Painel Admin para /app/out/public-admin e /app/api/public-admin
+// Espelhar Painel Admin para /app/dist/public-admin e /app/api/public-admin
 if (fs.existsSync(adminDist)) {
   const adminTargets = [
     path.join(rootDist, 'public-admin'),
@@ -78,7 +78,7 @@ if (fs.existsSync(adminDist)) {
   console.log('✅ Painel Admin integrado em todas as pastas public-admin!');
 }
 
-// Espelhar App Morador para /app/out/public e /app/api/public
+// Espelhar App Morador para /app/dist/public e /app/api/public
 if (fs.existsSync(mobileDist)) {
   const mobileTargets = [
     path.join(rootDist, 'public'),
@@ -96,9 +96,9 @@ if (fs.existsSync(mobileDist)) {
 // Verificação Final
 const rootIndex = path.join(rootDist, 'index.js');
 if (fs.existsSync(rootIndex)) {
-  console.log('\n📁 Verificação do build da API: OK (index.js presente em out/index.js)');
+  console.log('\n📁 Verificação do build da API: OK (index.js presente em dist/index.js)');
 } else {
-  console.error('\n❌ ERRO CRÍTICO: out/index.js não foi encontrado após o espelhamento!');
+  console.error('\n❌ ERRO CRÍTICO: dist/index.js não foi encontrado após o espelhamento!');
   process.exit(1);
 }
 

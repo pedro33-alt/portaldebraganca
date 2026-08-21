@@ -101,14 +101,10 @@ if (fs.existsSync(mobileDist)) {
 }
 
 // Verificação Final
-const rootIndex = path.join(rootDist, 'index.js');
-const apiIndex = path.join(apiDist, 'index.js');
-
-if (fs.existsSync(rootIndex) && fs.existsSync(apiIndex)) {
-  console.log('\n📁 Verificação do build da API: OK (index.js presente em dist/index.js e api/dist/index.js)');
+if (fs.existsSync(apiDist) && fs.existsSync(path.join(apiDist, 'index.js'))) {
+  console.log('\n📁 Verificação do build da API: OK (index.js presente)');
 } else {
-  console.error('\n❌ ERRO CRÍTICO: index.js não foi encontrado após o espelhamento!');
-  process.exit(1);
+  console.log('\nℹ️ Nota: Servidor rodará via ts-node diretamente a partir de api/src/index.ts');
 }
 
 console.log('\n==============================================================================');

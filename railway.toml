@@ -6,4 +6,4 @@ buildCommand = "npm run build"
 NIXPACKS_NODE_VERSION = "22"
 
 [deploy]
-startCommand = "node dist/index.js"
+startCommand = "npx ts-node api/src/index.ts"

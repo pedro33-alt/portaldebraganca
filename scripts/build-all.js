@@ -7,7 +7,7 @@ console.log('🚀 [BUILD PORTAL BRAGANÇA]: INICIANDO COMPILAÇÃO GERAL PARA RA
 console.log('==============================================================================\n');
 
 const rootDir = path.resolve(__dirname, '..');
-const rootDist = path.join(rootDir, 'dist');
+const rootDist = path.join(rootDir, 'out');
 const apiDir = path.join(rootDir, 'api');
 const adminDir = path.join(rootDir, 'admin-web');
 const mobileDir = path.join(rootDir, 'mobile');
@@ -53,27 +53,21 @@ try {
 // ------------------------------------------------------------------------------
 // PASSO 4: ESPELHAR BUILD NA RAIZ (REQUISITO FUNDAMENTAL DO NIXPACKS / RAILWAY)
 // ------------------------------------------------------------------------------
-console.log('\n4. Espelhando estrutura de build na raiz (/dist, /public, /public-admin)...');
+console.log('\n4. Espelhando estrutura de build na raiz (/out, /out/public, /out/public-admin)...');
 
-// Espelhar api/dist para /app/dist e /app/api/dist
+// Espelhar api/dist para /app/out
 if (fs.existsSync(apiDist)) {
-  const distTargets = [rootDist, apiDist];
-  distTargets.forEach(target => {
-    if (target !== apiDist) {
-      if (fs.existsSync(target)) fs.rmSync(target, { recursive: true, force: true });
-      fs.mkdirSync(target, { recursive: true });
-      fs.cpSync(apiDist, target, { recursive: true });
-    }
-  });
-  console.log('✅ Pasta dist espelhada na raiz (/dist e /api/dist)!');
+  if (fs.existsSync(rootDist)) fs.rmSync(rootDist, { recursive: true, force: true });
+  fs.mkdirSync(rootDist, { recursive: true });
+  fs.cpSync(apiDist, rootDist, { recursive: true });
+  console.log('✅ Pasta api/dist espelhada na raiz (/out)!');
 }
 
-// Espelhar Painel Admin para /app/public-admin e /app/api/public-admin
+// Espelhar Painel Admin para /app/out/public-admin e /app/api/public-admin
 if (fs.existsSync(adminDist)) {
   const adminTargets = [
-    path.join(rootDir, 'public-admin'),
-    path.join(apiDir, 'public-admin'),
     path.join(rootDist, 'public-admin'),
+    path.join(apiDir, 'public-admin'),
     path.join(apiDist, 'public-admin')
   ];
   adminTargets.forEach(target => {
@@ -84,12 +78,11 @@ if (fs.existsSync(adminDist)) {
   console.log('✅ Painel Admin integrado em todas as pastas public-admin!');
 }
 
-// Espelhar App Morador para /app/public e /app/api/public
+// Espelhar App Morador para /app/out/public e /app/api/public
 if (fs.existsSync(mobileDist)) {
   const mobileTargets = [
-    path.join(rootDir, 'public'),
-    path.join(apiDir, 'public'),
     path.join(rootDist, 'public'),
+    path.join(apiDir, 'public'),
     path.join(apiDist, 'public')
   ];
   mobileTargets.forEach(target => {
@@ -101,10 +94,12 @@ if (fs.existsSync(mobileDist)) {
 }
 
 // Verificação Final
-if (fs.existsSync(apiDist) && fs.existsSync(path.join(apiDist, 'index.js'))) {
-  console.log('\n📁 Verificação do build da API: OK (index.js presente)');
+const rootIndex = path.join(rootDist, 'index.js');
+if (fs.existsSync(rootIndex)) {
+  console.log('\n📁 Verificação do build da API: OK (index.js presente em out/index.js)');
 } else {
-  console.log('\nℹ️ Nota: Servidor rodará via ts-node diretamente a partir de api/src/index.ts');
+  console.error('\n❌ ERRO CRÍTICO: out/index.js não foi encontrado após o espelhamento!');
+  process.exit(1);
 }
 
 console.log('\n==============================================================================');

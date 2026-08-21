@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "scripts": {
     "build": "node scripts/build-all.js",
-    "start": "npx ts-node api/src/index.ts"
+    "start": "node out/index.js"
   },
   "dependencies": {
     "ts-node": "^10.9.2",

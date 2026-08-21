@@ -1,9 +1,5 @@
 [build]
-builder = "nixpacks"
-buildCommand = "npm run build"
+builder = "docker"
 
 [env]
 NIXPACKS_NODE_VERSION = "22"
-
-[deploy]
-startCommand = "node dist/index.js"

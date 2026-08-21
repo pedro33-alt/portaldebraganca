@@ -61,6 +61,14 @@ try {
     console.warn('⚠️ AVISO: Diretório admin-web/dist não foi encontrado.');
   }
 
+  // Verificação de arquivos gerados na API
+  const apiDist = path.join(apiDir, 'dist');
+  if (fs.existsSync(apiDist)) {
+    console.log('📁 Conteúdo de api/dist:', fs.readdirSync(apiDist));
+  } else {
+    console.error('❌ ERRO CRÍTICO: Pasta api/dist não foi criada!');
+  }
+
   console.log('\n==============================================================================');
   console.log('✅ [BUILD PORTAL BRAGANÇA]: COMPILAÇÃO CONCLUÍDA COM SUCESSO!');
   console.log('==============================================================================');

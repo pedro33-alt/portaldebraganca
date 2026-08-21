@@ -6,4 +6,4 @@ buildCommand = "npm run build"
 NIXPACKS_NODE_VERSION = "22"
 
 [deploy]
-startCommand = "npm start"
+startCommand = "node api/dist/index.js"

@@ -26,7 +26,7 @@ try {
 
   // 2. Compilar API TypeScript
   console.log('\n2. Compilando a API TypeScript backend...');
-  execSync('npm install --include=dev && npx tsc', { cwd: apiDir, stdio: 'inherit' });
+  execSync('npm install --include=dev && npm run build', { cwd: apiDir, stdio: 'inherit' });
 
   // 3. Copiar os arquivos web compilados para api/public e api/dist/public
   console.log('\n3. Integrando arquivos do aplicativo web na pasta pública da API...');
